@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<displays>
+<display id="d8fc0bed-0143-1000-8001-0a21017e96bc" type="" style="Code" enable="true">
+	<name><![CDATA[Dump User No Network ACLS]]></name>
+	<description><![CDATA[]]></description>
+	<tooltip><![CDATA[]]></tooltip>
+	<drillclass><![CDATA[]]></drillclass>
+	<CustomValues>
+	</CustomValues>
+	<query>
+		<sql><![CDATA[select msg||chr(10)
+from 
+(select 1 sort_order,cast(ltrim(rtrim(ltrim(dbms_metadata.get_ddl('USER',upper(:username))))||';') as varchar2(4000)) msg
+from dual
+union
+select 2,'alter user '||username||' quota '||decode(max_bytes,-1,'UNLIMITED',max_bytes)||' on '||tablespace_name||';'
+from dba_ts_quotas
+where username = upper(:username)
+union
+select 3,'grant '||privilege||' to '||grantee||';'
+from dba_sys_privs
+where grantee = upper(:username)
+union
+select 4,'grant '||granted_role||' to '||grantee||';'
+from dba_role_privs
+where grantee = upper(:username)
+union
+select 5,'grant '||privilege||' on '||owner||'."'||table_name||'" to '||grantee||';'
+from dba_tab_privs
+where grantee = upper(:username)
+and table_name not like 'BIN$%'
+) order by sort_order,msg]]></sql>
+		<binds>
+			<bind id="username">
+				<prompt><![CDATA[username]]></prompt>
+				<tooltip><![CDATA[username]]></tooltip>
+				<value><![CDATA[RAW_ODS]]></value>
+				<bracket><![CDATA[null]]></bracket>
+			</bind>
+		</binds>
+	</query>
+		<pdf version="VERSION_1_7" compression="CONTENT">
+			<docproperty title="null" author="null" subject="null" keywords="null" />
+			<cell toppadding="2" bottompadding="2" leftpadding="2" rightpadding="2" horizontalalign="LEFT" verticalalign="TOP" wrap="true" />
+			<column>
+				<heading font="null" size="10" style="NORMAL" color="-16777216" rowshading="-1" labeling="FIRST_PAGE" />
+				<footing font="null" size="10" style="NORMAL" color="-16777216" rowshading="-1" labeling="NONE" />
+				<blob blob="NONE" zip="false" />
+			</column>
+			<table font="null" size="10" style="NORMAL" color="-16777216" userowshading="false" oddrowshading="-1" evenrowshading="-1" showborders="true" spacingbefore="12" spacingafter="12" horizontalalign="LEFT" />
+			<header enable="false" generatedate="false">
+				<data>
+				
+				
+				null												</data>
+			</header>
+			<footer enable="false" generatedate="false">
+				<data value="null" />
+			</footer>
+			<security enable="false" useopenpassword="false" openpassword="null" encryption="EXCLUDE_METADATA">
+				<permission enable="false" permissionpassword="null" allowcopying="true" allowprinting="true" allowupdating="false" allowaccessdevices="false" />
+			</security>
+			<pagesetup papersize="LETTER" orientation="1" measurement="in" margintop="1.0" marginbottom="1.0" marginleft="1.0" marginright="1.0" />
+		</pdf>
+</display>
+</displays>

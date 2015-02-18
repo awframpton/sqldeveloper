@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<displays>
+<display id="27e8207c-0144-1000-8001-0a482805a7a6" type="" style="Table" enable="true">
+	<name><![CDATA[Blocking Locks]]></name>
+	<description><![CDATA[]]></description>
+	<tooltip><![CDATA[]]></tooltip>
+	<drillclass><![CDATA[null]]></drillclass>
+	<CustomValues>
+		<TYPE>horizontal</TYPE>
+	</CustomValues>
+	<query>
+		<sql><![CDATA[SELECT "USERNAME", "OSUSER",sid,seconds_in_wait,blocking_session, "TERMINAL", "KILL", "TAB", "LMODE", "REQUEST",type FROM(
+select	nvl(S.USERNAME,'Internal') username,osuser,s.seconds_in_wait,s.blocking_session,
+	nvl(S.TERMINAL,'None') terminal,
+	L.SID||','||S.SERIAL# Kill,
+	U1.NAME||'.'||substr(T1.NAME,1,20) tab,
+	decode(L.LMODE,1,'No Lock',
+		2,'Row Share',
+		3,'Row Exclusive',
+		4,'Share',
+		5,'Share Row Exclusive',
+		6,'Exclusive',null) lmode,
+	decode(L.REQUEST,1,'No Lock',
+		2,'Row Share',
+		3,'Row Exclusive',
+		4,'Share',
+		5,'Share Row Exclusive',
+		6,'Exclusive',null) request,
+    s.sid,
+    l.type
+from	V$LOCK L,
+	V$SESSION S,
+	SYS.USER$ U1,
+	SYS.OBJ$ T1
+where	L.SID = S.SID
+and	T1.OBJ# = decode(L.ID2,0,L.ID1,L.ID2)
+and	U1.USER# = T1.OWNER#
+and	S.TYPE != 'BACKGROUND'
+and l.type != 'AE'
+and     S.sid in(select blocking_session from v$session where blocking_session is not null)
+order by 1,2,7
+)]]></sql>
+	</query>
+		<pdf version="VERSION_1_7" compression="CONTENT">
+			<docproperty title="" author="" subject="" keywords="" />
+			<cell toppadding="2" bottompadding="2" leftpadding="2" rightpadding="2" horizontalalign="LEFT" verticalalign="TOP" wrap="true" />
+			<column>
+				<heading font="Times New Roman" size="10" style="NORMAL" color="-16777216" rowshading="-1" labeling="FIRST_PAGE" />
+				<footing font="Times New Roman" size="10" style="NORMAL" color="-16777216" rowshading="-1" labeling="NONE" />
+				<blob blob="NONE" zip="false" />
+			</column>
+			<table font="Times New Roman" size="10" style="NORMAL" color="-16777216" userowshading="false" oddrowshading="-1" evenrowshading="-1" showborders="true" spacingbefore="12" spacingafter="12" horizontalalign="LEFT" />
+			<header enable="false" generatedate="false">
+				<data>
+				
+				null								</data>
+			</header>
+			<footer enable="false" generatedate="false">
+				<data value="null" />
+			</footer>
+			<security enable="false" useopenpassword="false" openpassword="" encryption="EXCLUDE_METADATA">
+				<permission enable="false" permissionpassword="" allowcopying="true" allowprinting="true" allowupdating="false" allowaccessdevices="true" />
+			</security>
+			<pagesetup papersize="LETTER" orientation="1" measurement="in" margintop="1.0" marginbottom="1.0" marginleft="1.0" marginright="1.0" />
+		</pdf>
+	<display id="null" type="" style="Code" enable="true">
+		<name><![CDATA[Kill Session]]></name>
+		<description><![CDATA[]]></description>
+		<tooltip><![CDATA[]]></tooltip>
+		<drillclass><![CDATA[null]]></drillclass>
+		<CustomValues>
+		</CustomValues>
+		<query>
+			<sql><![CDATA[select 'alter system kill session '''||:KILL||''' immediate;'
+from dual]]></sql>
+			<binds>
+				<bind id="KILL">
+					<prompt><![CDATA[KILL]]></prompt>
+					<tooltip><![CDATA[KILL]]></tooltip>
+					<value><![CDATA[NULL_VALUE]]></value>
+					<bracket><![CDATA[null]]></bracket>
+				</bind>
+			</binds>
+		</query>
+			<pdf version="VERSION_1_7" compression="CONTENT">
+				<docproperty title="" author="" subject="" keywords="" />
+				<cell toppadding="2" bottompadding="2" leftpadding="2" rightpadding="2" horizontalalign="LEFT" verticalalign="TOP" wrap="true" />
+				<column>
+					<heading font="Times New Roman" size="10" style="NORMAL" color="-16777216" rowshading="-1" labeling="FIRST_PAGE" />
+					<footing font="Times New Roman" size="10" style="NORMAL" color="-16777216" rowshading="-1" labeling="NONE" />
+					<blob blob="NONE" zip="false" />
+				</column>
+				<table font="Times New Roman" size="10" style="NORMAL" color="-16777216" userowshading="false" oddrowshading="-1" evenrowshading="-1" showborders="true" spacingbefore="12" spacingafter="12" horizontalalign="LEFT" />
+				<header enable="false" generatedate="false">
+					<data>
+					
+					null										</data>
+				</header>
+				<footer enable="false" generatedate="false">
+					<data value="null" />
+				</footer>
+				<security enable="false" useopenpassword="false" openpassword="" encryption="EXCLUDE_METADATA">
+					<permission enable="false" permissionpassword="" allowcopying="true" allowprinting="true" allowupdating="false" allowaccessdevices="true" />
+				</security>
+				<pagesetup papersize="LETTER" orientation="1" measurement="in" margintop="1.0" marginbottom="1.0" marginleft="1.0" marginright="1.0" />
+			</pdf>
+	</display>
+	<display id="null" type="" style="Table" enable="true">
+		<name><![CDATA[SessionsBlocked]]></name>
+		<description><![CDATA[]]></description>
+		<tooltip><![CDATA[]]></tooltip>
+		<drillclass><![CDATA[null]]></drillclass>
+		<CustomValues>
+			<TYPE>horizontal</TYPE>
+		</CustomValues>
+		<query>
+			<sql><![CDATA[select	nvl(S.USERNAME,'Internal') username,osuser,s.sid,s.seconds_in_wait,
+	nvl(S.TERMINAL,'None') terminal,
+	s.SID||','||S.SERIAL# Kill,
+	U1.NAME||'.'||substr(T1.NAME,1,20) tab,
+	decode(L.LMODE,1,'No Lock',
+		2,'Row Share',
+		3,'Row Exclusive',
+		4,'Share',
+		5,'Share Row Exclusive',
+		6,'Exclusive',null) lmode,
+	decode(L.REQUEST,1,'No Lock',
+		2,'Row Share',
+		3,'Row Exclusive',
+		4,'Share',
+		5,'Share Row Exclusive',
+		6,'Exclusive',null) request,
+    l.type
+from	V$LOCK L,
+	V$SESSION S,
+	SYS.USER$ U1,
+	SYS.OBJ$ T1
+where	L.SID = S.SID
+and	T1.OBJ# = decode(L.ID2,0,L.ID1,L.ID2)
+and	U1.USER# = T1.OWNER#
+and	S.TYPE != 'BACKGROUND'
+and S.BLOCKING_SESSION = :SID
+and l.type != 'AE'
+order by 1,2,6]]></sql>
+			<binds>
+				<bind id="SID">
+					<prompt><![CDATA[SID]]></prompt>
+					<tooltip><![CDATA[SID]]></tooltip>
+					<value><![CDATA[NULL_VALUE]]></value>
+					<bracket><![CDATA[null]]></bracket>
+				</bind>
+			</binds>
+		</query>
+			<pdf version="VERSION_1_7" compression="CONTENT">
+				<docproperty title="null" author="null" subject="null" keywords="null" />
+				<cell toppadding="2" bottompadding="2" leftpadding="2" rightpadding="2" horizontalalign="LEFT" verticalalign="TOP" wrap="true" />
+				<column>
+					<heading font="null" size="10" style="NORMAL" color="-16777216" rowshading="-1" labeling="FIRST_PAGE" />
+					<footing font="null" size="10" style="NORMAL" color="-16777216" rowshading="-1" labeling="NONE" />
+					<blob blob="NONE" zip="false" />
+				</column>
+				<table font="null" size="10" style="NORMAL" color="-16777216" userowshading="false" oddrowshading="-1" evenrowshading="-1" showborders="true" spacingbefore="12" spacingafter="12" horizontalalign="LEFT" />
+				<header enable="false" generatedate="false">
+					<data>
+					null					</data>
+				</header>
+				<footer enable="false" generatedate="false">
+					<data value="null" />
+				</footer>
+				<security enable="false" useopenpassword="false" openpassword="null" encryption="EXCLUDE_METADATA">
+					<permission enable="false" permissionpassword="null" allowcopying="true" allowprinting="true" allowupdating="false" allowaccessdevices="false" />
+				</security>
+				<pagesetup papersize="LETTER" orientation="1" measurement="in" margintop="1.0" marginbottom="1.0" marginleft="1.0" marginright="1.0" />
+			</pdf>
+	</display>
+</display>
+</displays>

@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<displays>
+<display id="417c49d9-013a-1000-8003-0a2342a58907" type="" style="Table" enable="true">
+	<name><![CDATA[Tablespace Usage]]></name>
+	<description><![CDATA[Andy's tablespace usage report, with a files child report]]></description>
+	<tooltip><![CDATA[]]></tooltip>
+	<drillclass><![CDATA[null]]></drillclass>
+	<CustomValues>
+		<TYPE>horizontal</TYPE>
+	</CustomValues>
+	<query>
+		<sql><![CDATA[SELECT tablespace_name, "Total MB", "Used MB", "Free MB", "Autoextend MB", "Autoextend Free MB", "Percent Used", "Autoextend Percent Used" FROM(
+with fs as (select file_id,sum(bytes) bytes from dba_free_space group by file_id)
+,df as (select tablespace_name,file_id,bytes,maxbytes,autoextensible from dba_data_files)
+select df.tablespace_name,round(sum(df.bytes)/1048576) "Total MB"
+  ,round((sum(df.bytes - nvl(fs.bytes,0)))/1048576) "Used MB"
+  ,round(sum(nvl(fs.bytes,0))/1048576) "Free MB"
+  ,round(sum(maxbytes)/1048576) "Autoextend MB"
+  ,round(sum(case autoextensible 
+    when 'YES' then
+      case 
+        when maxbytes > df.bytes then maxbytes -df.bytes
+        else 0
+      end
+    else 0
+  end)/1048576) "Autoextend Free MB"
+  ,round(((sum(df.bytes - nvl(fs.bytes,0))) / sum(df.bytes))*100,2) "Percent Used"
+  ,round((sum(case autoextensible 
+    when 'YES' then
+      case 
+        when maxbytes > df.bytes then df.bytes - nvl(fs.bytes,0)
+        else df.bytes - nvl(fs.bytes,0)
+      end
+    else df.bytes - nvl(fs.bytes,0)
+  end) / sum(case autoextensible 
+    when 'YES' then
+      case 
+        when maxbytes > df.bytes then  maxbytes
+        else  df.bytes
+      end
+    else  df.bytes
+  end))*100,2) "Autoextend Percent Used"
+from df left outer join fs using (file_id)
+group by tablespace_name
+order by 7 desc,4
+)]]></sql>
+	</query>
+		<pdf version="VERSION_1_7" compression="CONTENT">
+			<docproperty title="" author="" subject="" keywords="" />
+			<cell toppadding="2" bottompadding="2" leftpadding="2" rightpadding="2" horizontalalign="LEFT" verticalalign="TOP" wrap="true" />
+			<column>
+				<heading font="Times New Roman" size="10" style="NORMAL" color="-16777216" rowshading="-1" labeling="FIRST_PAGE" />
+				<footing font="Times New Roman" size="10" style="NORMAL" color="-16777216" rowshading="-1" labeling="NONE" />
+				<blob blob="NONE" zip="false" />
+			</column>
+			<table font="Times New Roman" size="10" style="NORMAL" color="-16777216" userowshading="false" oddrowshading="-1" evenrowshading="-1" showborders="true" spacingbefore="12" spacingafter="12" horizontalalign="LEFT" />
+			<header enable="false" generatedate="false">
+				<data>
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				
+				null																																																																				</data>
+			</header>
+			<footer enable="false" generatedate="false">
+				<data value="null" />
+			</footer>
+			<security enable="false" useopenpassword="false" openpassword="" encryption="EXCLUDE_METADATA">
+				<permission enable="false" permissionpassword="" allowcopying="true" allowprinting="true" allowupdating="false" allowaccessdevices="true" />
+			</security>
+			<pagesetup papersize="LETTER" orientation="1" measurement="in" margintop="1.0" marginbottom="1.0" marginleft="1.0" marginright="1.0" />
+		</pdf>
+	<display id="null" type="" style="Table" enable="true">
+		<name><![CDATA[Files]]></name>
+		<description><![CDATA[]]></description>
+		<tooltip><![CDATA[]]></tooltip>
+		<drillclass><![CDATA[null]]></drillclass>
+		<CustomValues>
+			<TYPE>horizontal</TYPE>
+		</CustomValues>
+		<query>
+			<sql><![CDATA[select file_name,file_id,round(bytes / 1048576) mb,round(bytes / (1048576*1024)) gb,round(maxbytes / 1048576) max_mb
+,round(maxbytes / (1048576 * 1024)) max_gb,increment_by increment_bytes,round(increment_by / 1048576) increment_mb
+from dba_data_files
+where tablespace_name = :TABLESPACE_NAME
+order by 2 desc]]></sql>
+			<binds>
+				<bind id="TABLESPACE_NAME">
+					<prompt><![CDATA[TABLESPACE_NAME]]></prompt>
+					<tooltip><![CDATA[TABLESPACE_NAME]]></tooltip>
+					<value><![CDATA[NULL_VALUE]]></value>
+				</bind>
+			</binds>
+		</query>
+			<pdf version="VERSION_1_7" compression="CONTENT">
+				<docproperty title="" author="" subject="" keywords="" />
+				<cell toppadding="2" bottompadding="2" leftpadding="2" rightpadding="2" horizontalalign="LEFT" verticalalign="TOP" wrap="true" />
+				<column>
+					<heading font="Times New Roman" size="10" style="NORMAL" color="-16777216" rowshading="-1" labeling="FIRST_PAGE" />
+					<footing font="Times New Roman" size="10" style="NORMAL" color="-16777216" rowshading="-1" labeling="NONE" />
+					<blob blob="NONE" zip="false" />
+				</column>
+				<table font="Times New Roman" size="10" style="NORMAL" color="-16777216" userowshading="false" oddrowshading="-1" evenrowshading="-1" showborders="true" spacingbefore="12" spacingafter="12" horizontalalign="LEFT" />
+				<header enable="false" generatedate="false">
+					<data>
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					
+					null																																																																																					</data>
+				</header>
+				<footer enable="false" generatedate="false">
+					<data value="null" />
+				</footer>
+				<security enable="false" useopenpassword="false" openpassword="" encryption="EXCLUDE_METADATA">
+					<permission enable="false" permissionpassword="" allowcopying="true" allowprinting="true" allowupdating="false" allowaccessdevices="true" />
+				</security>
+				<pagesetup papersize="LETTER" orientation="1" measurement="in" margintop="1.0" marginbottom="1.0" marginleft="1.0" marginright="1.0" />
+			</pdf>
+	</display>
+	<display id="null" type="" style="Code" enable="true">
+		<name><![CDATA[Add File]]></name>
+		<description><![CDATA[]]></description>
+		<tooltip><![CDATA[]]></tooltip>
+		<drillclass><![CDATA[null]]></drillclass>
+		<CustomValues>
+		</CustomValues>
+		<query>
+			<sql><![CDATA[select 'alter tablespace '||:TABLESPACE_NAME||' add datafile '''||a.dname||lower(:TABLESPACE_NAME)||'_'||lpad(b.cnt+1,2,'0')||'.dbf'' size 2048M;'
+from (select regexp_replace(file_name,'^(.+/).+','\1') dname,rownum rn from dba_data_files b where tablespace_name = :TABLESPACE_NAME
+order by file_id desc) a,
+(select count(1) cnt from dba_data_files where tablespace_name = :TABLESPACE_NAME) b
+where a.rn = 1]]></sql>
+			<binds>
+				<bind id="TABLESPACE_NAME">
+					<prompt><![CDATA[TABLESPACE_NAME]]></prompt>
+					<tooltip><![CDATA[TABLESPACE_NAME]]></tooltip>
+					<value><![CDATA[NULL_VALUE]]></value>
+				</bind>
+			</binds>
+		</query>
+			<pdf version="VERSION_1_7" compression="CONTENT">
+				<docproperty title="" author="" subject="" keywords="" />
+				<cell toppadding="2" bottompadding="2" leftpadding="2" rightpadding="2" horizontalalign="LEFT" verticalalign="TOP" wrap="true" />
+				<column>
+					<heading font="Times New Roman" size="10" style="NORMAL" color="-16777216" rowshading="-1" labeling="FIRST_PAGE" />
+					<footing font="Times New Roman" size="10" style="NORMAL" color="-16777216" rowshading="-1" labeling="NONE" />
+					<blob blob="NONE" zip="false" />
+				</column>
+				<table font="Times New Roman" size="10" style="NORMAL" color="-16777216" userowshading="false" oddrowshading="-1" evenrowshading="-1" showborders="true" spacingbefore="12" spacingafter="12" horizontalalign="LEFT" />
+				<header enable="false" generatedate="false">
+					<data>
+					
+					
+					
+					
+					
+					null																														</data>
+				</header>
+				<footer enable="false" generatedate="false">
+					<data value="null" />
+				</footer>
+				<security enable="false" useopenpassword="false" openpassword="" encryption="EXCLUDE_METADATA">
+					<permission enable="false" permissionpassword="" allowcopying="true" allowprinting="true" allowupdating="false" allowaccessdevices="true" />
+				</security>
+				<pagesetup papersize="LETTER" orientation="1" measurement="in" margintop="1.0" marginbottom="1.0" marginleft="1.0" marginright="1.0" />
+			</pdf>
+	</display>
+</display>
+</displays>
